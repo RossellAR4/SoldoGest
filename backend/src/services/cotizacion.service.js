@@ -2,9 +2,9 @@ const {
   Cotizacion,
   CotizacionMaterial,
   Material
-} = require('./models');
+} = require('../models');
 
-const { sequelize } = require('./config/database');
+const { sequelize } = require('../config/database');
 
 // =============================
 // Obtener todas (solo activas)
