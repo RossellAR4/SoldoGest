@@ -1,9 +1,9 @@
 const express = require('express');
 const { body, param } = require('express-validator');
 
-const validateRequest = require('../middleware/validate.middleware');
-const { verifyToken, authorizeRole } = require('../middleware/auth.middleware');
-const cotizacionController = require('../controllers/cotizacion.controller');
+const validateRequest = require('./middleware/validate.middleware');
+const { verifyToken, authorizeRole } = require('./middleware/auth.middleware');
+const cotizacionController = require('./controllers/cotizacion.controller');
 
 const router = express.Router();
 
@@ -20,7 +20,9 @@ router.get(
   '/:id',
   verifyToken,
   authorizeRole('admin', 'empleado'),
-  validateRequest([param('id').isInt().withMessage('ID debe ser entero')]),
+  validateRequest([
+    param('id').isInt().withMessage('ID debe ser entero')
+  ]),
   cotizacionController.getCotizacionById
 );
 
@@ -33,15 +35,23 @@ router.post(
     body('clienteId').isInt().withMessage('clienteId debe ser entero'),
     body('descripcion').notEmpty().withMessage('Descripción obligatoria'),
     body('mano_obra').isDecimal().withMessage('mano_obra inválida'),
-    body('tiempo_estimado').isInt().withMessage('tiempo_estimado debe ser entero (días)'),
-    body('materiales').isArray({ min: 1 }).withMessage('materiales debe ser un arreglo'),
-    body('materiales.*.materialId').isInt().withMessage('materialId debe ser entero'),
-    body('materiales.*.cantidad').isDecimal().withMessage('cantidad inválida'),
+    body('tiempo_estimado')
+      .isInt({ min: 1 })
+      .withMessage('tiempo_estimado debe ser entero mayor a 0'),
+    body('materiales')
+      .isArray({ min: 1 })
+      .withMessage('materiales debe ser un arreglo'),
+    body('materiales.*.materialId')
+      .isInt()
+      .withMessage('materialId debe ser entero'),
+    body('materiales.*.cantidad')
+      .isDecimal()
+      .withMessage('cantidad inválida')
   ]),
   cotizacionController.createCotizacion
 );
 
-// Solo admin: actualizar estado (aprobar / cancelar / pendiente)
+// Solo admin: actualizar estado
 router.patch(
   '/:id/estado',
   verifyToken,
@@ -50,7 +60,7 @@ router.patch(
     param('id').isInt().withMessage('ID debe ser entero'),
     body('estado')
       .isIn(['pendiente', 'aprobado', 'cancelado'])
-      .withMessage('Estado inválido'),
+      .withMessage('Estado inválido')
   ]),
   cotizacionController.updateEstado
 );
@@ -60,7 +70,9 @@ router.delete(
   '/:id',
   verifyToken,
   authorizeRole('admin'),
-  validateRequest([param('id').isInt().withMessage('ID debe ser entero')]),
+  validateRequest([
+    param('id').isInt().withMessage('ID debe ser entero')
+  ]),
   cotizacionController.deleteCotizacion
 );
 

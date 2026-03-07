@@ -2,9 +2,9 @@ const {
   Cotizacion,
   CotizacionMaterial,
   Material
-} = require('../models');
+} = require('./models');
 
-const { sequelize } = require('../config/database');
+const { sequelize } = require('./config/database');
 
 // =============================
 // Obtener todas (solo activas)
@@ -51,11 +51,15 @@ const create = async (data) => {
       descripcion,
       materiales, // [{ materialId, cantidad }]
       mano_obra,
-      tiempo_estimado,
-      fecha_validez
+      tiempo_estimado
     } = data;
 
     let subtotal_materiales = 0;
+
+    // La fecha de emisión y validez se generan automáticamente
+    const fechaEmision = new Date();
+    const fechaValidez = new Date(fechaEmision);
+    fechaValidez.setDate(fechaValidez.getDate() + 15);
 
     // 1) Crear cotización base
     const nuevaCotizacion = await Cotizacion.create(
@@ -68,8 +72,8 @@ const create = async (data) => {
         subtotal_materiales: 0,
         total: 0,
         estado: 'pendiente',
-        fecha_emision: new Date(),
-        fecha_validez: fecha_validez || null,
+        fecha_emision: fechaEmision,
+        fecha_validez: fechaValidez,
         activo: true
       },
       { transaction }
@@ -116,7 +120,6 @@ const create = async (data) => {
 
     // 4) Retornar cotización completa
     return await getById(nuevaCotizacion.id);
-
   } catch (error) {
     await transaction.rollback();
     throw error;
@@ -127,8 +130,21 @@ const create = async (data) => {
 // Actualizar estado
 // =============================
 const updateEstado = async (id, estado) => {
-  const cotizacion = await Cotizacion.findOne({ where: { id, activo: true } });
+  const cotizacion = await Cotizacion.findOne({
+    where: { id, activo: true }
+  });
+
   if (!cotizacion) return null;
+
+  // No permitir aprobar cotizaciones vencidas
+  if (estado === 'aprobado') {
+    const hoy = new Date();
+    const fechaValidez = new Date(cotizacion.fecha_validez);
+
+    if (hoy > fechaValidez) {
+      throw new Error('La cotización está vencida y no puede aprobarse');
+    }
+  }
 
   return await cotizacion.update({ estado });
 };

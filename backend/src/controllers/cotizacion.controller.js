@@ -3,32 +3,53 @@ const cotizacionService = require('../services/cotizacion.service');
 const getAllCotizaciones = async (req, res) => {
   try {
     const cotizaciones = await cotizacionService.getAll();
-    res.json(cotizaciones);
+    return res.json(cotizaciones);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      error: 'Error al obtener las cotizaciones',
+      detalle: error.message
+    });
   }
 };
 
 const getCotizacionById = async (req, res) => {
   try {
     const { id } = req.params;
+
     const cotizacion = await cotizacionService.getById(id);
-    if (!cotizacion) return res.status(404).json({ message: 'Cotización no encontrada' });
-    res.json(cotizacion);
+
+    if (!cotizacion) {
+      return res.status(404).json({
+        message: 'Cotización no encontrada'
+      });
+    }
+
+    return res.json(cotizacion);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      error: 'Error al obtener la cotización',
+      detalle: error.message
+    });
   }
 };
 
 const createCotizacion = async (req, res) => {
   try {
-    const usuarioId = req.user.id; // 🔐 desde JWT
-    const data = { ...req.body, usuarioId };
+    const usuarioId = req.user.id;
+
+    const data = {
+      ...req.body,
+      usuarioId
+    };
 
     const cotizacion = await cotizacionService.create(data);
-    res.status(201).json(cotizacion);
+
+    return res.status(201).json(cotizacion);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(400).json({
+      error: 'No se pudo crear la cotización',
+      detalle: error.message
+    });
   }
 };
 
@@ -38,11 +59,19 @@ const updateEstado = async (req, res) => {
     const { estado } = req.body;
 
     const cotizacion = await cotizacionService.updateEstado(id, estado);
-    if (!cotizacion) return res.status(404).json({ message: 'Cotización no encontrada' });
 
-    res.json(cotizacion);
+    if (!cotizacion) {
+      return res.status(404).json({
+        message: 'Cotización no encontrada'
+      });
+    }
+
+    return res.json(cotizacion);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(400).json({
+      error: 'No se pudo actualizar el estado de la cotización',
+      detalle: error.message
+    });
   }
 };
 
@@ -51,11 +80,21 @@ const deleteCotizacion = async (req, res) => {
     const { id } = req.params;
 
     const ok = await cotizacionService.remove(id);
-    if (!ok) return res.status(404).json({ message: 'Cotización no encontrada' });
 
-    res.json({ message: 'Cotización desactivada correctamente' });
+    if (!ok) {
+      return res.status(404).json({
+        message: 'Cotización no encontrada'
+      });
+    }
+
+    return res.json({
+      message: 'Cotización desactivada correctamente'
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      error: 'Error al desactivar la cotización',
+      detalle: error.message
+    });
   }
 };
 
