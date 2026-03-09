@@ -1,11 +1,31 @@
 <script setup>
-const items = [
-  { title: 'Inicio', icon: 'mdi-home', to: '/' },
-  { title: 'Clientes', icon: 'mdi-account-group', to: '/clientes' },
-  { title: 'Materiales', icon: 'mdi-package-variant', to: '/materiales' },
-  { title: 'Cotizaciones', icon: 'mdi-file-document-outline', to: '/cotizaciones' },
-  { title: 'Trabajos', icon: 'mdi-hammer-wrench', to: '/trabajos' }
-]
+import { computed } from 'vue'
+import { useAuth } from '../composables/useAuth'
+
+const { getUser } = useAuth()
+
+const user = computed(() => getUser() || {})
+
+const items = computed(() => {
+  const menu = [
+    { title: 'Inicio', icon: 'mdi-home', to: '/' },
+    { title: 'Clientes', icon: 'mdi-account-group', to: '/clientes' },
+    { title: 'Materiales', icon: 'mdi-package-variant', to: '/materiales' },
+    { title: 'Cotizaciones', icon: 'mdi-file-document-outline', to: '/cotizaciones' },
+    { title: 'Trabajos', icon: 'mdi-hammer-wrench', to: '/trabajos' }
+  ]
+
+  // Solo admin ve Usuarios
+  if (user.value?.rol === 'admin') {
+    menu.splice(1, 0, {
+      title: 'Usuarios',
+      icon: 'mdi-account-cog',
+      to: '/usuarios'
+    })
+  }
+
+  return menu
+})
 </script>
 
 <template>

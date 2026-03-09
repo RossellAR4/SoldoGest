@@ -68,7 +68,33 @@ const login = async (req, res) => {
   }
 };
 
+const updateUsuario = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const data = {
+      nombre: req.body.nombre,
+      email: req.body.email,
+      rol: req.body.rol
+    };
+
+    const usuario = await usuarioService.updateUsuario(id, data);
+
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    return res.json(usuario);
+  } catch (error) {
+    return res.status(500).json({
+      error: 'Error actualizando usuario',
+      detalle: error.message
+    });
+  }
+};
+
 module.exports = {
+  updateUsuario,
   getAllUsuarios,
   getUsuarioById,
   createUsuario,

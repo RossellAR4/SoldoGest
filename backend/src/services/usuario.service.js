@@ -29,14 +29,22 @@ const createUsuario = async (data) => {
 };
 
 const updateUsuario = async (id, data) => {
-  const usuario = await Usuario.findOne({ where: { id, activo: true } });
+  const usuario = await Usuario.findOne({
+    where: { id, activo: true }
+  });
+
   if (!usuario) return null;
 
   if (data.password) {
     data.password = await bcrypt.hash(data.password, 10);
   }
 
-  return await usuario.update(data);
+  await usuario.update(data);
+
+  return await Usuario.findOne({
+    where: { id, activo: true },
+    attributes: { exclude: ['password'] }
+  });
 };
 
 const deleteUsuario = async (id) => {
@@ -46,6 +54,8 @@ const deleteUsuario = async (id) => {
   await usuario.update({ activo: false });
   return true;
 };
+
+
 
 module.exports = {
   getAllUsuarios,

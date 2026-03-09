@@ -17,6 +17,18 @@ router.post(
   usuarioController.login
 );
 
+router.put(
+  '/:id',
+  verifyToken,
+  authorizeRole('admin'),
+  validateRequest([
+    param('id').isInt().withMessage('ID debe ser entero'),
+    body('nombre').optional().notEmpty().withMessage('Nombre es obligatorio'),
+    body('email').optional().isEmail().withMessage('Email válido requerido'),
+    body('rol').optional().isIn(['admin', 'empleado']).withMessage('Rol inválido'),
+  ]),
+  usuarioController.updateUsuario
+);
 // Admin: crear usuario
 router.post(
   '/',

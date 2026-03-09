@@ -1,30 +1,48 @@
 <script setup>
+import { computed } from 'vue'
+import { useAuth } from '../composables/useAuth'
+
 definePageMeta({
   middleware: 'auth'
 })
 
-const accesos = [
-  {
-    title: 'Clientes',
-    subtitle: 'Registrar y listar clientes',
-    to: '/clientes'
-  },
-  {
-    title: 'Materiales',
-    subtitle: 'Inventario y medidas',
-    to: '/materiales'
-  },
-  {
-    title: 'Cotizaciones',
-    subtitle: 'Crear y aprobar',
-    to: '/cotizaciones'
-  },
-  {
-    title: 'Trabajos',
-    subtitle: 'Seguimiento de proyectos',
-    to: '/trabajos'
+const { getUser } = useAuth()
+const user = computed(() => getUser() || {})
+
+const accesos = computed(() => {
+  const items = [
+    {
+      title: 'Clientes',
+      subtitle: 'Registrar y listar clientes',
+      to: '/clientes'
+    },
+    {
+      title: 'Materiales',
+      subtitle: 'Inventario y medidas',
+      to: '/materiales'
+    },
+    {
+      title: 'Cotizaciones',
+      subtitle: 'Crear y aprobar',
+      to: '/cotizaciones'
+    },
+    {
+      title: 'Trabajos',
+      subtitle: 'Seguimiento de proyectos',
+      to: '/trabajos'
+    }
+  ]
+
+  if (user.value?.rol === 'admin') {
+    items.unshift({
+      title: 'Usuarios',
+      subtitle: 'Gestión de usuarios del sistema',
+      to: '/usuarios'
+    })
   }
-]
+
+  return items
+})
 </script>
 
 <template>
