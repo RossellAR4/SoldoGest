@@ -2,14 +2,22 @@
 import { computed } from 'vue'
 import { useAuth } from '../composables/useAuth'
 
-definePageMeta({
-  middleware: 'auth'
-})
 
+definePageMeta({
+  middleware: 'auth',
+  layout: 'default'
+})
+const token = useCookie('token')
+
+if (!token.value) {
+  await navigateTo('/login', { replace: true })
+}
 const { getUser } = useAuth()
 const user = computed(() => getUser() || {})
 
 const accesos = computed(() => {
+  const esAdmin = user.value?.rol === 'admin'
+
   const items = [
     {
       title: 'Clientes',
@@ -18,7 +26,9 @@ const accesos = computed(() => {
     },
     {
       title: 'Materiales',
-      subtitle: 'Inventario y medidas',
+      subtitle: esAdmin
+        ? 'Inventario y medidas'
+        : 'Consultar inventario y medidas',
       to: '/materiales'
     },
     {
@@ -33,7 +43,7 @@ const accesos = computed(() => {
     }
   ]
 
-  if (user.value?.rol === 'admin') {
+  if (esAdmin) {
     items.unshift({
       title: 'Usuarios',
       subtitle: 'Gestión de usuarios del sistema',

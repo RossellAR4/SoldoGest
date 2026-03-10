@@ -2,19 +2,27 @@ export const useAuth = () => {
   const token = useCookie('token', {
     default: () => null,
     sameSite: 'lax',
-    secure: false
+    secure: false,
+    path: '/'
   })
 
   const usuario = useCookie('usuario', {
     default: () => null,
     sameSite: 'lax',
-    secure: false
+    secure: false,
+    path: '/'
   })
 
   const authUser = useState('authUser', () => null)
 
   const config = useRuntimeConfig()
   const apiBase = config.public.apiBase
+
+  const clearSession = () => {
+    token.value = null
+    usuario.value = null
+    authUser.value = null
+  }
 
   const login = async (credentials) => {
     const response = await $fetch(`${apiBase}/usuarios/login`, {
@@ -23,48 +31,65 @@ export const useAuth = () => {
     })
 
     token.value = response.token
-    usuario.value = JSON.stringify(response.usuario)
+    usuario.value = response.usuario
     authUser.value = response.usuario
 
     return response
   }
 
   const logout = async () => {
-    token.value = null
-    usuario.value = null
-    authUser.value = null
-    await navigateTo('/login')
+    clearSession()
+    await navigateTo('/login', { replace: true })
   }
 
   const getUser = () => {
     if (authUser.value) return authUser.value
 
+    if (!usuario.value || usuario.value === 'null' || usuario.value === 'undefined') {
+      return null
+    }
+
     try {
-      if (!usuario.value) return null
-      const parsed = JSON.parse(usuario.value)
+      const parsed =
+        typeof usuario.value === 'string'
+          ? JSON.parse(usuario.value)
+          : usuario.value
+
       authUser.value = parsed
       return parsed
     } catch (error) {
+      clearSession()
       return null
     }
   }
 
   const isAuthenticated = () => {
-    return !!token.value
+    return !!token.value && token.value !== 'null' && token.value !== 'undefined'
   }
 
   const authFetch = async (url, options = {}) => {
-    if (!token.value) {
+    if (!isAuthenticated()) {
+      clearSession()
+      await navigateTo('/login', { replace: true })
       throw new Error('No hay token disponible')
     }
 
-    return await $fetch(`${apiBase}${url}`, {
-      ...options,
-      headers: {
-        ...(options.headers || {}),
-        Authorization: `Bearer ${token.value}`
+    try {
+      return await $fetch(`${apiBase}${url}`, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          Authorization: `Bearer ${token.value}`
+        }
+      })
+    } catch (error) {
+      if (error?.status === 401 || error?.status === 403) {
+        clearSession()
+        await navigateTo('/login', { replace: true })
       }
-    })
+
+      throw error
+    }
   }
 
   return {
@@ -73,6 +98,7 @@ export const useAuth = () => {
     authUser,
     login,
     logout,
+    clearSession,
     getUser,
     isAuthenticated,
     authFetch

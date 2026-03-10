@@ -3,8 +3,9 @@ import { computed } from 'vue'
 import { useAuth } from '../composables/useAuth'
 
 const { getUser } = useAuth()
-
 const user = computed(() => getUser() || {})
+
+const isAdmin = computed(() => user.value?.rol === 'admin')
 
 const items = computed(() => {
   const menu = [
@@ -15,8 +16,7 @@ const items = computed(() => {
     { title: 'Trabajos', icon: 'mdi-hammer-wrench', to: '/trabajos' }
   ]
 
-  // Solo admin ve Usuarios
-  if (user.value?.rol === 'admin') {
+  if (isAdmin.value) {
     menu.splice(1, 0, {
       title: 'Usuarios',
       icon: 'mdi-account-cog',

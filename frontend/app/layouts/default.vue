@@ -1,6 +1,16 @@
+<script setup>
+import { computed } from 'vue'
+
+const token = useCookie('token')
+
+const isLoggedIn = computed(() => {
+  return !!token.value && token.value !== 'null' && token.value !== 'undefined'
+})
+</script>
+
 <template>
   <v-app>
-    <div class="main-layout">
+    <div v-if="isLoggedIn" class="main-layout">
       <MenuSidebar />
 
       <div class="main-content">

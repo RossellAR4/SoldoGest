@@ -124,12 +124,7 @@ const crearUsuario = async () => {
   }
 }
 
-/*
-  IMPORTANTE:
-  Tu backend actual NO tiene ruta para editar usuario.
-  Este método queda listo para cuando agregues:
-  PUT /usuarios/:id  o  PATCH /usuarios/:id
-*/
+
 const guardarEdicion = async () => {
   saving.value = true
   try {

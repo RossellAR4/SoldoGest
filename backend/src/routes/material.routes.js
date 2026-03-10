@@ -7,6 +7,26 @@ const materialController = require('../controllers/material.controller');
 
 const router = express.Router();
 
+const categoriasValidas = [
+  'perfil_estructural',
+  'lamina',
+  'consumible',
+  'acabado',
+  'accesorio',
+  'otro'
+];
+
+const unidadesValidas = [
+  'unidad',
+  'metro',
+  'pie',
+  'libra',
+  'kilogramo',
+  'galon',
+  'litro',
+  'paquete'
+];
+
 // Admin y empleado: listar
 router.get(
   '/',
@@ -20,7 +40,9 @@ router.get(
   '/:id',
   verifyToken,
   authorizeRole('admin', 'empleado'),
-  validateRequest([param('id').isInt().withMessage('ID debe ser entero')]),
+  validateRequest([
+    param('id').isInt().withMessage('ID debe ser entero')
+  ]),
   materialController.getMaterialById
 );
 
@@ -30,17 +52,60 @@ router.post(
   verifyToken,
   authorizeRole('admin'),
   validateRequest([
-    body('nombre').notEmpty().withMessage('Nombre es obligatorio'),
+    body('nombre')
+      .notEmpty()
+      .withMessage('Nombre es obligatorio'),
+
+    body('categoria')
+      .isIn(categoriasValidas)
+      .withMessage('Categoría inválida'),
+
     body('tipo')
-      .isIn(['varilla', 'tubo_cuadrado', 'tubo_redondo', 'lamina', 'otro'])
-      .withMessage('Tipo inválido'),
-    body('precio_unitario').isDecimal().withMessage('Precio unitario inválido'),
-    body('stock').optional().isDecimal().withMessage('Stock inválido'),
-    body('longitud').isDecimal().withMessage('Longitud inválida'),
-    body('ancho').optional().isDecimal().withMessage('Ancho inválido'),
-    body('alto').optional().isDecimal().withMessage('Alto inválido'),
-    body('grosor').isDecimal().withMessage('Grosor inválido'),
-    body('unidad_medida').notEmpty().withMessage('Unidad de medida obligatoria'),
+      .notEmpty()
+      .withMessage('Tipo es obligatorio'),
+
+    body('precio_unitario')
+      .isDecimal()
+      .withMessage('Precio unitario inválido'),
+
+    body('stock')
+      .optional()
+      .isDecimal()
+      .withMessage('Stock inválido'),
+
+    body('unidad_medida')
+      .isIn(unidadesValidas)
+      .withMessage('Unidad de medida inválida'),
+
+    body('largo')
+      .optional({ nullable: true })
+      .isDecimal()
+      .withMessage('Largo inválido'),
+
+    body('ancho')
+      .optional({ nullable: true })
+      .isDecimal()
+      .withMessage('Ancho inválido'),
+
+    body('alto')
+      .optional({ nullable: true })
+      .isDecimal()
+      .withMessage('Alto inválido'),
+
+    body('grosor')
+      .optional({ nullable: true })
+      .isDecimal()
+      .withMessage('Grosor inválido'),
+
+    body('diametro')
+      .optional({ nullable: true })
+      .isDecimal()
+      .withMessage('Diámetro inválido'),
+
+    body('descripcion')
+      .optional({ nullable: true })
+      .isString()
+      .withMessage('Descripción inválida')
   ]),
   materialController.createMaterial
 );
@@ -51,29 +116,81 @@ router.put(
   verifyToken,
   authorizeRole('admin'),
   validateRequest([
-    param('id').isInt().withMessage('ID debe ser entero'),
-    body('nombre').optional().notEmpty(),
+    param('id')
+      .isInt()
+      .withMessage('ID debe ser entero'),
+
+    body('nombre')
+      .optional()
+      .notEmpty()
+      .withMessage('Nombre inválido'),
+
+    body('categoria')
+      .optional()
+      .isIn(categoriasValidas)
+      .withMessage('Categoría inválida'),
+
     body('tipo')
       .optional()
-      .isIn(['varilla', 'tubo_cuadrado', 'tubo_redondo', 'lamina', 'otro'])
+      .notEmpty()
       .withMessage('Tipo inválido'),
-    body('precio_unitario').optional().isDecimal(),
-    body('stock').optional().isDecimal(),
-    body('longitud').optional().isDecimal(),
-    body('ancho').optional().isDecimal(),
-    body('alto').optional().isDecimal(),
-    body('grosor').optional().isDecimal(),
-    body('unidad_medida').optional().notEmpty(),
+
+    body('precio_unitario')
+      .optional()
+      .isDecimal()
+      .withMessage('Precio unitario inválido'),
+
+    body('stock')
+      .optional()
+      .isDecimal()
+      .withMessage('Stock inválido'),
+
+    body('unidad_medida')
+      .optional()
+      .isIn(unidadesValidas)
+      .withMessage('Unidad de medida inválida'),
+
+    body('largo')
+      .optional({ nullable: true })
+      .isDecimal()
+      .withMessage('Largo inválido'),
+
+    body('ancho')
+      .optional({ nullable: true })
+      .isDecimal()
+      .withMessage('Ancho inválido'),
+
+    body('alto')
+      .optional({ nullable: true })
+      .isDecimal()
+      .withMessage('Alto inválido'),
+
+    body('grosor')
+      .optional({ nullable: true })
+      .isDecimal()
+      .withMessage('Grosor inválido'),
+
+    body('diametro')
+      .optional({ nullable: true })
+      .isDecimal()
+      .withMessage('Diámetro inválido'),
+
+    body('descripcion')
+      .optional({ nullable: true })
+      .isString()
+      .withMessage('Descripción inválida')
   ]),
   materialController.updateMaterial
 );
 
-// Solo admin: desactivar (soft delete)
+// Solo admin: desactivar
 router.delete(
   '/:id',
   verifyToken,
   authorizeRole('admin'),
-  validateRequest([param('id').isInt().withMessage('ID debe ser entero')]),
+  validateRequest([
+    param('id').isInt().withMessage('ID debe ser entero')
+  ]),
   materialController.deleteMaterial
 );
 

@@ -2,13 +2,24 @@
 import { computed, onMounted } from 'vue'
 import { useAuth } from '../composables/useAuth'
 
-const { getUser, logout, usuario } = useAuth()
+const { getUser, logout, token } = useAuth()
 
 const user = computed(() => getUser() || null)
 
-onMounted(() => {
-  console.log('COOKIE USUARIO EN TOPBAR:', usuario.value)
-  console.log('USER PARSEADO EN TOPBAR:', user.value)
+onMounted(async () => {
+  const tokenInvalido =
+    !token.value ||
+    token.value === 'null' ||
+    token.value === 'undefined'
+
+  if (tokenInvalido) {
+    await logout()
+    return
+  }
+
+  if (!user.value) {
+    await logout()
+  }
 })
 </script>
 
@@ -19,15 +30,10 @@ onMounted(() => {
       <div class="topbar-subtitle">Gestión del taller</div>
     </div>
 
-    <div class="topbar-right">
-      <div class="user-box" v-if="user">
+    <div class="topbar-right" v-if="user">
+      <div class="user-box">
         <div class="user-name">{{ user.nombre || 'Usuario' }}</div>
         <div class="user-role">{{ user.rol || '' }}</div>
-      </div>
-
-      <div class="user-box" v-else>
-        <div class="user-name">Usuario</div>
-        <div class="user-role">Sin datos</div>
       </div>
 
       <v-btn class="logout-btn" variant="flat" @click="logout">
