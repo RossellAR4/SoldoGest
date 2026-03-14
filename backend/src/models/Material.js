@@ -47,6 +47,7 @@ const Material = sequelize.define('Material', {
       'unidad',
       'metro',
       'pie',
+      'pulgada',
       'libra',
       'kilogramo',
       'galon',

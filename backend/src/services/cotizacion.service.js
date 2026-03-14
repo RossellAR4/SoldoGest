@@ -1,30 +1,34 @@
 const {
   Cotizacion,
   CotizacionMaterial,
-  Material
+  Material,
+  Cliente
 } = require('../models');
 
 const { sequelize } = require('../config/database');
 
-// =============================
-// Obtener todas (solo activas)
-// =============================
-const getAll = async () => {
+const getAll = async (filters = {}) => {
+  const where = { activo: true };
+
+  if (filters.estado) {
+    where.estado = filters.estado;
+  }
+
   return await Cotizacion.findAll({
-    where: { activo: true },
+    where,
     include: [
       {
         model: Material,
         through: { attributes: ['cantidad', 'precio_unitario', 'subtotal'] }
+      },
+      {
+        model: Cliente
       }
     ],
     order: [['id', 'DESC']]
   });
 };
 
-// =============================
-// Obtener por ID (activa)
-// =============================
 const getById = async (id) => {
   return await Cotizacion.findOne({
     where: { id, activo: true },
@@ -32,54 +36,77 @@ const getById = async (id) => {
       {
         model: Material,
         through: { attributes: ['cantidad', 'precio_unitario', 'subtotal'] }
+      },
+      {
+        model: Cliente
       }
     ]
   });
 };
 
-// =============================
-// Crear cotización con materiales
-// usuarioId viene del JWT (controller)
-// =============================
 const create = async (data) => {
   const transaction = await sequelize.transaction();
 
   try {
     const {
       clienteId,
+      cliente_nombre,
+      cliente_telefono,
+      cliente_email,
+      tipo_trabajo,
       usuarioId,
       descripcion,
-      materiales, // [{ materialId, cantidad }]
+      materiales,
       mano_obra,
       tiempo_estimado
     } = data;
 
     let subtotal_materiales = 0;
+    let clienteIdFinal = null;
+    let nombreFinal = '';
+    let telefonoFinal = null;
+    let emailFinal = null;
 
-    // La fecha de emisión y validez se generan automáticamente
-    const fechaEmision = new Date();
-    const fechaValidez = new Date(fechaEmision);
-    fechaValidez.setDate(fechaValidez.getDate() + 15);
+    if (clienteId) {
+      const cliente = await Cliente.findOne({
+        where: { id: clienteId, activo: true },
+        transaction
+      });
 
-    // 1) Crear cotización base
-    const nuevaCotizacion = await Cotizacion.create(
-      {
-        clienteId,
-        usuarioId,
-        descripcion,
-        mano_obra,
-        tiempo_estimado,
-        subtotal_materiales: 0,
-        total: 0,
-        estado: 'pendiente',
-        fecha_emision: fechaEmision,
-        fecha_validez: fechaValidez,
-        activo: true
-      },
-      { transaction }
-    );
+      if (!cliente) {
+        throw new Error('Cliente no encontrado');
+      }
 
-    // 2) Insertar materiales en tabla intermedia
+      clienteIdFinal = cliente.id;
+      nombreFinal = cliente.nombre;
+      telefonoFinal = cliente.telefono || null;
+      emailFinal = cliente.email || null;
+    } else {
+      if (!cliente_nombre || !cliente_nombre.trim()) {
+        throw new Error('Debe indicar el nombre del cliente');
+      }
+
+      nombreFinal = cliente_nombre.trim();
+      telefonoFinal = cliente_telefono || null;
+      emailFinal = cliente_email || null;
+    }
+
+    const nuevaCotizacion = await Cotizacion.create({
+      clienteId: clienteIdFinal,
+      usuarioId,
+      cliente_nombre: nombreFinal,
+      cliente_telefono: telefonoFinal,
+      cliente_email: emailFinal,
+      tipo_trabajo: tipo_trabajo || null,
+      descripcion,
+      mano_obra,
+      tiempo_estimado,
+      subtotal_materiales: 0,
+      total: 0,
+      estado: 'pendiente',
+      activo: true
+    }, { transaction });
+
     for (const item of materiales) {
       const material = await Material.findOne({
         where: { id: item.materialId, activo: true },
@@ -96,29 +123,24 @@ const create = async (data) => {
 
       subtotal_materiales += subtotal;
 
-      await CotizacionMaterial.create(
-        {
-          cotizacionId: nuevaCotizacion.id,
-          materialId: material.id,
-          cantidad,
-          precio_unitario: precio,
-          subtotal
-        },
-        { transaction }
-      );
+      await CotizacionMaterial.create({
+        cotizacionId: nuevaCotizacion.id,
+        materialId: material.id,
+        cantidad,
+        precio_unitario: precio,
+        subtotal
+      }, { transaction });
     }
 
-    // 3) Actualizar totales
     const total = subtotal_materiales + parseFloat(mano_obra);
 
-    await nuevaCotizacion.update(
-      { subtotal_materiales, total },
-      { transaction }
-    );
+    await nuevaCotizacion.update({
+      subtotal_materiales,
+      total
+    }, { transaction });
 
     await transaction.commit();
 
-    // 4) Retornar cotización completa
     return await getById(nuevaCotizacion.id);
   } catch (error) {
     await transaction.rollback();
@@ -126,9 +148,6 @@ const create = async (data) => {
   }
 };
 
-// =============================
-// Actualizar estado
-// =============================
 const updateEstado = async (id, estado) => {
   const cotizacion = await Cotizacion.findOne({
     where: { id, activo: true }
@@ -136,7 +155,6 @@ const updateEstado = async (id, estado) => {
 
   if (!cotizacion) return null;
 
-  // No permitir aprobar cotizaciones vencidas
   if (estado === 'aprobado') {
     const hoy = new Date();
     const fechaValidez = new Date(cotizacion.fecha_validez);
@@ -149,11 +167,11 @@ const updateEstado = async (id, estado) => {
   return await cotizacion.update({ estado });
 };
 
-// =============================
-// Soft delete
-// =============================
 const remove = async (id) => {
-  const cotizacion = await Cotizacion.findOne({ where: { id, activo: true } });
+  const cotizacion = await Cotizacion.findOne({
+    where: { id, activo: true }
+  });
+
   if (!cotizacion) return false;
 
   await cotizacion.update({ activo: false });

@@ -20,6 +20,7 @@ const unidadesValidas = [
   'unidad',
   'metro',
   'pie',
+  'pulgada',
   'libra',
   'kilogramo',
   'galon',

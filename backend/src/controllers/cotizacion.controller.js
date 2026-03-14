@@ -2,7 +2,10 @@ const cotizacionService = require('../services/cotizacion.service');
 
 const getAllCotizaciones = async (req, res) => {
   try {
-    const cotizaciones = await cotizacionService.getAll();
+    const { estado } = req.query;
+
+    const cotizaciones = await cotizacionService.getAll({ estado });
+
     return res.json(cotizaciones);
   } catch (error) {
     return res.status(500).json({
