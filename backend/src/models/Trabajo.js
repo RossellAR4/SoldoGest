@@ -7,41 +7,58 @@ const Trabajo = sequelize.define('Trabajo', {
     primaryKey: true,
     autoIncrement: true
   },
+
   clienteId: {
     type: DataTypes.INTEGER,
     allowNull: false
   },
+
   cotizacionId: {
     type: DataTypes.INTEGER,
     allowNull: true
   },
+
   usuarioId: {
     type: DataTypes.INTEGER,
     allowNull: false
   },
+
   descripcion: {
     type: DataTypes.TEXT,
     allowNull: false
   },
+
   fecha_inicio: {
     type: DataTypes.DATE,
+    allowNull: false,
     defaultValue: DataTypes.NOW
   },
+
   fecha_estimada_instalacion: {
     type: DataTypes.DATE,
     allowNull: false
   },
+
   fecha_finalizacion: {
     type: DataTypes.DATE,
     allowNull: true
   },
+
   estado: {
-    type: DataTypes.ENUM('en_proceso','finalizado','cancelado'),
+    type: DataTypes.ENUM('en_proceso', 'finalizado', 'cancelado'),
+    allowNull: false,
     defaultValue: 'en_proceso'
   },
+
   total: {
-    type: DataTypes.DECIMAL(12,2),
+    type: DataTypes.DECIMAL(12, 2),
     allowNull: false
+  },
+
+  activo: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true
   }
 }, {
   tableName: 'trabajos',

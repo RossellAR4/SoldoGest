@@ -88,6 +88,7 @@ const handleBuscarMaterial = async (id) => {
 
 const handleAgregarMaterial = ({ material, cantidad }) => {
   const materialObj = material.value || material
+
   const existente = materiales.value.find(
     (item) => item.materialId === materialObj.id
   )
@@ -153,7 +154,8 @@ const crearCotizacion = async () => {
       body: payload
     })
 
-    await navigateTo(`/cotizaciones/${created.id}`)
+    alert('Cotización creada correctamente')
+    await navigateTo(`/cotizaciones/${created.id}?print=1`)
   } catch (error) {
     alert(
       error?.data?.detalle ||
@@ -183,7 +185,7 @@ const crearCotizacion = async () => {
         </NuxtLink>
 
         <v-btn class="btn-primary" :loading="saving" @click="crearCotizacion">
-          Guardar cotización
+          Guardar e imprimir
         </v-btn>
       </div>
     </div>
@@ -230,11 +232,11 @@ const crearCotizacion = async () => {
     </v-card>
 
     <MaterialSelectorDialog
-  v-model="showMaterialDialog"
-  :loading="buscandoMaterial"
-  :buscar-material-fn="handleBuscarMaterial"
-  @agregar="handleAgregarMaterial"
-/>
+      v-model="showMaterialDialog"
+      :loading="buscandoMaterial"
+      :buscar-material-fn="handleBuscarMaterial"
+      @agregar="handleAgregarMaterial"
+    />
   </div>
 </template>
 
@@ -268,6 +270,7 @@ const crearCotizacion = async () => {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .back-link {
@@ -276,7 +279,7 @@ const crearCotizacion = async () => {
 
 .mid-actions {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
 }
 
 .btn-primary {
@@ -294,37 +297,40 @@ const crearCotizacion = async () => {
 }
 
 .section-title {
-  margin: 0 0 14px 0;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 800;
+  margin: 0 0 16px 0;
+  color: white;
 }
 
 .totals-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
 
 .total-box {
   background: rgba(255, 255, 255, 0.03);
   border-radius: 14px;
-  padding: 14px;
+  padding: 16px;
 }
 
 .total-box-highlight {
-  border: 1px solid rgba(255, 106, 0, 0.28);
+  border: 1px solid rgba(255, 106, 0, 0.35);
+  background: rgba(255, 106, 0, 0.08);
 }
 
 .total-label {
   display: block;
   color: #9caec5;
-  margin-bottom: 8px;
+  font-size: 0.88rem;
+  margin-bottom: 6px;
 }
 
 .total-value {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  color: #ff9f4a;
+  color: white;
 }
 
 @media (max-width: 900px) {
@@ -332,9 +338,12 @@ const crearCotizacion = async () => {
     grid-template-columns: 1fr;
   }
 
-  .header-actions {
-    width: 100%;
-    justify-content: flex-end;
+  .page-header {
+    align-items: stretch;
+  }
+
+  .mid-actions {
+    justify-content: stretch;
   }
 }
 </style>

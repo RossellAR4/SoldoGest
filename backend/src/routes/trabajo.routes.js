@@ -20,7 +20,9 @@ router.get(
   '/:id',
   verifyToken,
   authorizeRole('admin', 'empleado'),
-  validateRequest([param('id').isInt().withMessage('ID debe ser entero')]),
+  validateRequest([
+    param('id').isInt().withMessage('ID debe ser entero')
+  ]),
   trabajoController.getTrabajoById
 );
 
@@ -30,23 +32,42 @@ router.post(
   verifyToken,
   authorizeRole('admin'),
   validateRequest([
-    body('cotizacion_id').isInt().withMessage('cotizacion_id debe ser entero'),
-    body('fecha_instalacion').notEmpty().withMessage('fecha_instalacion es obligatoria'),
+    body('cotizacionId')
+      .isInt()
+      .withMessage('cotizacionId debe ser entero'),
+
+    body('fecha_estimada_instalacion')
+      .notEmpty()
+      .withMessage('fecha_estimada_instalacion es obligatoria')
+      .isISO8601()
+      .withMessage('fecha_estimada_instalacion debe ser una fecha válida')
   ]),
   trabajoController.createFromCotizacion
 );
 
-// Admin y empleado: crear trabajo manual (sin cotización)
+// Admin y empleado: crear trabajo manual
 router.post(
   '/',
   verifyToken,
   authorizeRole('admin', 'empleado'),
   validateRequest([
-    body('clienteId').isInt().withMessage('clienteId debe ser entero'),
-    body('usuarioId').optional().isInt(), // normalmente se toma de req.user.id en controller (recomendado)
-    body('descripcion').notEmpty().withMessage('Descripción obligatoria'),
-    body('fecha_estimada_instalacion').notEmpty().withMessage('Fecha estimada obligatoria'),
-    body('total').isDecimal().withMessage('Total inválido'),
+    body('clienteId')
+      .isInt()
+      .withMessage('clienteId debe ser entero'),
+
+    body('descripcion')
+      .notEmpty()
+      .withMessage('Descripción obligatoria'),
+
+    body('fecha_estimada_instalacion')
+      .notEmpty()
+      .withMessage('Fecha estimada obligatoria')
+      .isISO8601()
+      .withMessage('Fecha estimada inválida'),
+
+    body('total')
+      .isDecimal()
+      .withMessage('Total inválido')
   ]),
   trabajoController.createManual
 );
@@ -58,7 +79,9 @@ router.patch(
   authorizeRole('admin', 'empleado'),
   validateRequest([
     param('id').isInt().withMessage('ID debe ser entero'),
-    body('estado').isIn(['en_proceso', 'finalizado', 'cancelado']).withMessage('Estado inválido'),
+    body('estado')
+      .isIn(['en_proceso', 'finalizado', 'cancelado'])
+      .withMessage('Estado inválido')
   ]),
   trabajoController.updateEstado
 );
@@ -68,7 +91,9 @@ router.delete(
   '/:id',
   verifyToken,
   authorizeRole('admin'),
-  validateRequest([param('id').isInt().withMessage('ID debe ser entero')]),
+  validateRequest([
+    param('id').isInt().withMessage('ID debe ser entero')
+  ]),
   trabajoController.deleteTrabajo
 );
 

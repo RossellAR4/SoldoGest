@@ -19,6 +19,7 @@ const clienteNombre = computed(() => {
 const estadoLabel = computed(() => {
   const estado = props.cotizacion?.estado || 'pendiente'
 
+  if (estado === 'aprobado') return 'Aprobada'
   if (estado === 'cancelado') return 'Cancelada'
   if (estado === 'vencido') return 'Vencida'
   return 'Pendiente'
@@ -27,6 +28,7 @@ const estadoLabel = computed(() => {
 const estadoClass = computed(() => {
   const estado = props.cotizacion?.estado || 'pendiente'
 
+  if (estado === 'aprobado') return 'estado-aprobado'
   if (estado === 'cancelado') return 'estado-cancelado'
   if (estado === 'vencido') return 'estado-vencido'
   return 'estado-pendiente'
@@ -155,6 +157,12 @@ const fechaValidez = computed(() => {
   background: rgba(255, 166, 0, 0.18);
   color: #ffbe5c;
   border: 1px solid rgba(255, 190, 92, 0.35);
+}
+
+.estado-aprobado {
+  background: rgba(76, 175, 80, 0.18);
+  color: #9be29d;
+  border: 1px solid rgba(155, 226, 157, 0.35);
 }
 
 .estado-cancelado {

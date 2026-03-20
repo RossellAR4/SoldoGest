@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useAuth } from '../../composables/useAuth'
-import CotizacionCard from '../../components/cotizaciones/CotizacionCard.vue'
+import TrabajoCard from '../../components/trabajos/TrabajoCard.vue'
 
 definePageMeta({
   middleware: 'auth',
@@ -11,36 +11,34 @@ definePageMeta({
 const { authFetch } = useAuth()
 
 const loading = ref(false)
-const cotizaciones = ref([])
-const filtroEstado = ref('pendiente')
+const trabajos = ref([])
+const filtroEstado = ref('en_proceso')
 
 const tabs = [
-  { label: 'Pendientes', value: 'pendiente' },
-  { label: 'Aprobadas', value: 'aprobado' },
-  { label: 'Canceladas', value: 'cancelado' },
-  { label: 'Vencidas', value: 'vencido' }
+  { label: 'En proceso', value: 'en_proceso' },
+  { label: 'Finalizados', value: 'finalizado' },
+  { label: 'Cancelados', value: 'cancelado' }
 ]
 
-const filteredCotizaciones = computed(() => {
-  return cotizaciones.value.filter((item) => item.estado === filtroEstado.value)
+const filteredTrabajos = computed(() => {
+  return trabajos.value.filter((item) => item.estado === filtroEstado.value)
 })
 
-const cargarCotizaciones = async () => {
+const cargarTrabajos = async () => {
   loading.value = true
-
   try {
-    const response = await authFetch('/cotizaciones', {
+    const response = await authFetch('/trabajos', {
       method: 'GET'
     })
 
-    const data = Array.isArray(response) ? response : []
-    cotizaciones.value = data
+    trabajos.value = Array.isArray(response) ? response : []
+    console.log('Trabajos cargados:', trabajos.value)
   } catch (error) {
-    console.error('Error cargando cotizaciones:', error)
+    console.error('Error cargando trabajos:', error)
     alert(
       error?.data?.message ||
       error?.data?.error ||
-      'No se pudieron cargar las cotizaciones'
+      'No se pudieron cargar los trabajos'
     )
   } finally {
     loading.value = false
@@ -48,24 +46,24 @@ const cargarCotizaciones = async () => {
 }
 
 onMounted(async () => {
-  await cargarCotizaciones()
+  await cargarTrabajos()
 })
 </script>
 
 <template>
-  <div class="cotizaciones-page">
+  <div class="trabajos-page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">Cotizaciones</h1>
+        <h1 class="page-title">Trabajos</h1>
         <p class="page-subtitle">
-          Consulta las cotizaciones por estado y accede a su detalle.
+          Consulta los trabajos por estado y accede a su detalle.
         </p>
       </div>
 
-      <NuxtLink to="/cotizaciones/crear" class="create-link">
+      <NuxtLink to="/trabajos/crear" class="create-link">
         <v-btn class="btn-primary" size="large">
-          <v-icon start>mdi-file-document-plus-outline</v-icon>
-          Nueva cotización
+          <v-icon start>mdi-briefcase-plus-outline</v-icon>
+          Nuevo trabajo
         </v-btn>
       </NuxtLink>
     </div>
@@ -89,25 +87,25 @@ onMounted(async () => {
 
     <div v-if="loading" class="loading-box">
       <v-progress-circular indeterminate color="deep-orange" />
-      <span>Cargando cotizaciones...</span>
+      <span>Cargando trabajos...</span>
     </div>
 
-    <div v-else-if="filteredCotizaciones.length" class="cards-grid">
-      <CotizacionCard
-        v-for="cotizacion in filteredCotizaciones"
-        :key="cotizacion.id"
-        :cotizacion="cotizacion"
+    <div v-else-if="filteredTrabajos.length" class="cards-grid">
+      <TrabajoCard
+        v-for="trabajo in filteredTrabajos"
+        :key="trabajo.id"
+        :trabajo="trabajo"
       />
     </div>
 
     <v-card v-else class="empty-card" elevation="0">
       <div class="empty-content">
         <v-icon size="48" class="empty-icon">
-          mdi-file-document-outline
+          mdi-briefcase-outline
         </v-icon>
-        <h3>No hay cotizaciones en esta categoría</h3>
+        <h3>No hay trabajos en esta categoría</h3>
         <p>
-          Cuando existan cotizaciones con ese estado aparecerán aquí.
+          Cuando existan trabajos con ese estado aparecerán aquí.
         </p>
       </div>
     </v-card>
@@ -115,7 +113,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.cotizaciones-page {
+.trabajos-page {
   color: white;
 }
 
@@ -212,6 +210,7 @@ onMounted(async () => {
   align-items: center;
   gap: 14px;
   text-align: center;
+  color: white;
 }
 
 .empty-card {
@@ -225,6 +224,7 @@ onMounted(async () => {
 .empty-content h3 {
   margin: 0;
   font-size: 1.2rem;
+  color: white;
 }
 
 .empty-content p {
